@@ -120,7 +120,7 @@ public class MainController {
         passwordConfig.passwordFilePath = file.getAbsolutePath();
 
         // Open password enter dialog.
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/password.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/password.fxml"));
         Parent parent = fxmlLoader.load();
         PasswordController passwordController = fxmlLoader.getController();
 

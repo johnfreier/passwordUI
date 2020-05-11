@@ -14,9 +14,9 @@ public class MainApplicationRXML extends Application {
     
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("/main.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("/fxml/main.fxml"));
         Scene scene = new Scene(root, 500, 300);
-        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/styles/style.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("My Password");
         primaryStage.show();

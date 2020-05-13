@@ -11,12 +11,13 @@ import com.johnfreier.mypassword.domain.Item;
 
 public class Builder {
 
-	public static List<Item> buildItems(String text) {
+	public static List<Item> buildItems(String text) throws Exception {
 		
 		Set<Item> items = new TreeSet<Item>();
 		
 		
 		String[] strItems = text.split("[}]");
+		
 		// start with 1 to skip password bracket
 		for(int x = 1; x < strItems.length; x++) {
 			

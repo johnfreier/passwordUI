@@ -5,10 +5,12 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 
 import com.johnfreier.mypassword.builder.Builder;
 import com.johnfreier.mypassword.config.PasswordConfig;
@@ -75,16 +77,44 @@ public class MainController {
 
     @FXML
     private Button btnGenerate;
-    
+
     private Item selectedItem = new Item();
 
     private ObservableList<Item> observableItems;
 
     private PasswordConfig passwordConfig = new PasswordConfig();
 
+    private PasswordService passwordService = new PasswordService();
+
     @FXML
     public void initialize() {
 
+        try {
+
+            File file = new File(PasswordConfig.CONFIG_FILE_NAME);
+            if (file.exists()) {
+
+                FileInputStream fStream = new FileInputStream(file);
+
+                Properties properties = new Properties();
+                properties.load(fStream);
+
+                passwordConfig.passwordFilePath = properties.getProperty(PasswordConfig.CONFIG_KEY_PASSWORD_FILE);
+
+                if (passwordConfig.passwordFilePath != null) {
+
+                    File passwordFile = new File(passwordConfig.passwordFilePath);
+
+                    loadPasswordFile(passwordFile);
+
+                }
+
+            }
+
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
     }
 
@@ -108,7 +138,7 @@ public class MainController {
     }
 
     @FXML
-    public void handleMnuFileOpen(ActionEvent event) throws IOException {
+    public void handleMnuFileOpen(ActionEvent event) throws Exception {
 
         // Open file chooser.
         FileChooser chooser = new FileChooser();
@@ -117,28 +147,47 @@ public class MainController {
         if (file == null)
             return;
 
-        passwordConfig.passwordFilePath = file.getAbsolutePath();
+        savePasswordFileConfigLocation(file);
 
-        // Open password enter dialog.
-        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/password.fxml"));
-        Parent parent = fxmlLoader.load();
-        PasswordController passwordController = fxmlLoader.getController();
+        loadPasswordFile(file);
 
-        Scene scene = new Scene(parent, 300, 140);
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.setScene(scene);
-        stage.setResizable(false);
-        stage.showAndWait();
+    }
 
-        // Get the password that was entered.
-        passwordConfig.password = passwordController.getPassword();
-        passwordController.setPassword(""); // Clear out the password just incase of caching.
-        if (passwordConfig.password == null || passwordConfig.password.isEmpty())
-            return;
+    @FXML
+    public void handleMnuNewMasterFile(ActionEvent event) {
 
-        // Draw the list of password items.
-        redrawPasswordList(file, passwordConfig.password);
+        try {
+            
+            passwordConfig.passwordFilePath = PasswordConfig.DEFAULT_PASSWORD_FILENAME;
+
+            File passwordFile = new File(passwordConfig.passwordFilePath);
+
+            if (passwordFile.exists()) {
+
+                error("A master password file already exsits, please remove before creating a new one.");
+                
+                return;
+                
+            } else {
+                
+                String newPassword = getPasswordFromPasswordController();
+                passwordConfig.password = newPassword;
+                
+                List<Item> items = new ArrayList<>();
+                passwordService.savePasswordList(items, passwordConfig);
+                
+                savePasswordFileConfigLocation(passwordFile);
+                
+                File file = new File(passwordConfig.passwordFilePath);
+                redrawPasswordList(file, passwordConfig.password);
+
+            }
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
 
     }
 
@@ -162,18 +211,18 @@ public class MainController {
         clearAllTextBoxes();
 
         lstItems.getSelectionModel().clearSelection();
-        
+
         txtTitle.requestFocus();
 
     }
 
     @FXML
     public void handleMnuSave(ActionEvent event) {
-        
+
         Item item = selectedItem;
-        
+
         boolean isNew = (item == null);
-        
+
         if (isNew) {
             item = new Item();
         }
@@ -187,12 +236,12 @@ public class MainController {
         if (isNew) {
             observableItems.add(item);
         }
-        
+
         FXCollections.sort(observableItems);
 
         try {
 
-            PasswordService.savePasswordList(observableItems, passwordConfig);
+            passwordService.savePasswordList(observableItems, passwordConfig);
 
         } catch (Exception e) {
 
@@ -227,7 +276,7 @@ public class MainController {
             try {
 
                 observableItems.remove(selectedItem);
-                PasswordService.savePasswordList(observableItems, passwordConfig);
+                passwordService.savePasswordList(observableItems, passwordConfig);
                 selectedItem = null;
 
                 lstItems.getSelectionModel().clearSelection();
@@ -251,7 +300,7 @@ public class MainController {
 
     @FXML
     public void handleMenuEdit(ActionEvent event) {
-        
+
         disableAllButtons(true);
         btnSave.setDisable(false);
         btnGenerate.setDisable(false);
@@ -261,12 +310,14 @@ public class MainController {
         txtTitle.requestFocus();
 
     }
-    
+
     @FXML
     public void handleMenuGenerate(ActionEvent event) {
+
+        String generatedPassword = passwordService.generatePassword();
         
-        PasswordService.generatePassword();
-        
+        txtPassword.setText(generatedPassword);
+
     }
 
     /**
@@ -298,7 +349,7 @@ public class MainController {
 
                         disableAllButtons(true);
                         enableAllTextBoxes(false);
-                        
+
                         btnCopy.setDisable(false);
                         btnEdit.setDisable(false);
                         btnDelete.setDisable(false);
@@ -382,6 +433,7 @@ public class MainController {
         alert.setTitle("Error Dialog");
         alert.setHeaderText("There was an error.");
         alert.setContentText(text);
+        alert.showAndWait();
 
     }
 
@@ -400,6 +452,72 @@ public class MainController {
         txtPassword.setText("");
         txtNote.setText("");
         txtURL.setText("");
+    }
+
+    private void loadPasswordFile(File file) throws Exception {
+
+        passwordConfig.passwordFilePath = file.getAbsolutePath();
+
+        // Get the password that was entered.
+        passwordConfig.password = getPasswordFromPasswordController();
+
+        // Check if passwords match.
+        boolean isPasswordCorrect = passwordService.verifyPassword(passwordConfig);
+
+        if (passwordConfig.password == null || passwordConfig.password.isEmpty() || isPasswordCorrect == false) {
+
+//            Alert alert = new Alert(AlertType.ERROR);
+//            alert.setTitle("Incorrect Password");
+//            alert.setHeaderText("Incorrect Password");
+//            alert.setContentText("You have entered in incorrect password.");
+//            alert.showAndWait();
+            
+            error("You have entered in incorrect password.");
+
+            disableAllButtons(true);
+
+            return;
+
+        }
+
+        // Draw the list of password items.
+        redrawPasswordList(file, passwordConfig.password);
+
+    }
+
+    private String getPasswordFromPasswordController() throws Exception {
+
+        // Open password enter dialog.
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/password.fxml"));
+        Parent parent = fxmlLoader.load();
+        PasswordController passwordController = fxmlLoader.getController();
+
+        Scene scene = new Scene(parent, 300, 140);
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setScene(scene);
+        stage.setResizable(false);
+        stage.showAndWait();
+
+        String resultPassword = passwordController.getPassword();
+
+        passwordController.setPassword(""); // Clear out the password just incase of caching.
+
+        // Get the password that was entered.
+        return resultPassword;
+
+    }
+
+    private void savePasswordFileConfigLocation(File file) throws Exception {
+
+        String string = new StringBuilder(PasswordConfig.CONFIG_KEY_PASSWORD_FILE)
+                .append("=")
+                .append(file.getAbsolutePath()).toString();
+
+        File configFile = new File(PasswordConfig.CONFIG_FILE_NAME);
+
+        FileUtils.writeToFile(configFile, string);
+
     }
 
 }

@@ -26,3 +26,12 @@ you must add a vendor in the pom.xml in the plugin config.
 The file will be placed in.
 `./target/jfx/native`
 
+## Build a release
+To create a release and upload to github.
+
+`cd target/jfx/app`
+`tar -czvf ./myPasswords.tar.gz ./myPasswords-jfx.jar ./lib`
+
+Verifiy the tar.
+`tar -ztvf ./myPasswords.tar.gz`
+

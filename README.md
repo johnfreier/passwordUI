@@ -1,6 +1,9 @@
 # passwordUI
 Password UI
 
+## Requirements
+Oracle Java 1.8 - Must include JavaFX, currently Oracle Java 1.8 includes JavaFX in the /jre/lib/ext folder jfxrt.jar. 
+
 
 ## Run the project
 

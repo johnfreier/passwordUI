@@ -24,7 +24,7 @@
 
 	<build>
 
-		<finalName>ui</finalName>
+		<finalName>myPasswords</finalName>
 
 		<plugins>
 

@@ -35,3 +35,4 @@ To create a release and upload to github.
 Verifiy the tar.
 `tar -ztvf ./myPasswords.tar.gz`
 
+And then upload the release to GitHub.

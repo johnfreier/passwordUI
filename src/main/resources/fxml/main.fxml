@@ -57,6 +57,7 @@
             <Label onMouseClicked="#handleTxtURLClick" text="URL" GridPane.rowIndex="3" />
             <TextField fx:id="txtTitle" editable="false" GridPane.columnIndex="1" />
             <TextField fx:id="txtUsername" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+            <TextField fx:id="txtPasswordShow" editable="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <PasswordField fx:id="txtPassword" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <TextField fx:id="txtURL" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="3" />
             <TextArea fx:id="txtNote" editable="false" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="50.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
@@ -72,12 +73,13 @@
    <bottom>
       <ToolBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
         <items>
-          <Button fx:id="btnCopy" disable="true" mnemonicParsing="false" onAction="#handleBtnCopyPasswordAction" text="Copy" />
-            <Button fx:id="btnNew" disable="true" mnemonicParsing="false" onAction="#handleMnuNew" text="New" />
-            <Button fx:id="btnEdit" disable="true" mnemonicParsing="false" onAction="#handleMenuEdit" text="Edit" />
-            <Button fx:id="btnSave" disable="true" mnemonicParsing="false" onAction="#handleMnuSave" text="Save" />
-            <Button fx:id="btnDelete" disable="true" mnemonicParsing="false" onAction="#handleMenuDelete" text="Delete" />
-            <Button fx:id="btnGenerate" disable="true" mnemonicParsing="false" onAction="#handleMenuGenerate" text="Generate" />
+           <Button fx:id="btnCopy" disable="true" mnemonicParsing="false" onAction="#handleButtonCopyPassword" text="Copy" />
+           <Button fx:id="btnNew" disable="true" mnemonicParsing="false" onAction="#handleButtonNew" text="New" />
+           <Button fx:id="btnEdit" disable="true" mnemonicParsing="false" onAction="#handleButtonEdit" text="Edit" />
+           <Button fx:id="btnSave" disable="true" mnemonicParsing="false" onAction="#handleButtonSave" text="Save" />
+           <Button fx:id="btnDelete" disable="true" mnemonicParsing="false" onAction="#handleButtonDelete" text="Delete" />
+           <Button fx:id="btnGenerate" disable="true" mnemonicParsing="false" onAction="#handleButtonGenerate" text="Generate" />
+           <Button fx:id="btnPasswordShow" disable="true" mnemonicParsing="false" onAction="#handleButtonShowPassword" text="Show Password" />
         </items>
       </ToolBar>
    </bottom>

@@ -6,6 +6,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +54,9 @@ public class MainController {
 
     @FXML
     private PasswordField txtPassword;
+    
+    @FXML
+    private TextField txtPasswordShow;
 
     @FXML
     private TextArea txtNote;
@@ -77,6 +81,9 @@ public class MainController {
 
     @FXML
     private Button btnGenerate;
+    
+    @FXML
+    private Button btnPasswordShow;
 
     private Item selectedItem = new Item();
 
@@ -119,7 +126,7 @@ public class MainController {
     }
 
     @FXML
-    public void handleBtnCopyPasswordAction(ActionEvent event) {
+    public void handleButtonCopyPassword(ActionEvent event) {
         copyToClipboard(selectedItem.getPassword());
     }
 
@@ -198,13 +205,14 @@ public class MainController {
     }
 
     @FXML
-    public void handleMnuNew(ActionEvent event) {
+    public void handleButtonNew(ActionEvent event) {
 
         selectedItem = null;
 
         disableAllButtons(true);
         btnSave.setDisable(false);
         btnGenerate.setDisable(false);
+        btnPasswordShow.setDisable(false);
 
         enableAllTextBoxes(true);
 
@@ -217,7 +225,7 @@ public class MainController {
     }
 
     @FXML
-    public void handleMnuSave(ActionEvent event) {
+    public void handleButtonSave(ActionEvent event) {
 
         Item item = selectedItem;
 
@@ -229,9 +237,14 @@ public class MainController {
 
         item.setTitle(txtTitle.getText());
         item.setUsername(txtUsername.getText());
-        item.setPassword(txtPassword.getText());
         item.setNote(txtNote.getText());
         item.setUrl(txtURL.getText());
+        
+        if (txtPassword.isVisible()) {
+            item.setPassword(txtPassword.getText());
+        } else {
+        	item.setPassword(txtPasswordShow.getText());
+        }
 
         if (isNew) {
             observableItems.add(item);
@@ -257,7 +270,7 @@ public class MainController {
     }
 
     @FXML
-    public void handleMenuDelete(ActionEvent event) {
+    public void handleButtonDelete(ActionEvent event) {
 
         if (selectedItem == null) {
             return;
@@ -299,11 +312,12 @@ public class MainController {
     }
 
     @FXML
-    public void handleMenuEdit(ActionEvent event) {
+    public void handleButtonEdit(ActionEvent event) {
 
         disableAllButtons(true);
         btnSave.setDisable(false);
         btnGenerate.setDisable(false);
+        btnPasswordShow.setDisable(false);
 
         enableAllTextBoxes(true);
 
@@ -312,12 +326,58 @@ public class MainController {
     }
 
     @FXML
-    public void handleMenuGenerate(ActionEvent event) {
+    public void handleButtonGenerate(ActionEvent event) {
 
         String generatedPassword = passwordService.generatePassword();
         
         txtPassword.setText(generatedPassword);
+        txtPasswordShow.setText(generatedPassword);
 
+    }
+    
+    @FXML
+    public void handleButtonShowPassword(ActionEvent event) {
+    	
+    	if (txtPassword.isVisible()) {
+
+    		showPassword();
+    		
+    	} else {
+    	
+    		hidePassword();
+    		
+    	}
+    	
+    }
+    
+    /**
+     * These are the action that show the plain text password field and hides the masked password field.
+     */
+    private void showPassword() {
+    	
+		txtPasswordShow.setText(txtPassword.getText());
+    	
+    	txtPassword.setVisible(false);
+    	
+    	txtPasswordShow.setVisible(true);
+    	
+    	btnPasswordShow.setText("Hide Password");
+    	
+    }
+    
+    /**
+     * These are the action that shows the masked password field and hides the plain text password field.
+     */
+    private void hidePassword() {
+    	
+		txtPassword.setText(txtPasswordShow.getText());
+    	
+    	txtPassword.setVisible(true);
+    	
+    	txtPasswordShow.setVisible(false);
+    	
+    	btnPasswordShow.setText("Show Password");
+    	
     }
 
     /**
@@ -354,6 +414,9 @@ public class MainController {
                         btnEdit.setDisable(false);
                         btnDelete.setDisable(false);
                         btnNew.setDisable(false);
+                        btnPasswordShow.setDisable(false);
+                        
+                        hidePassword();
 
                         selectedItem = newValue;
                         redrawItemDetail();
@@ -381,12 +444,14 @@ public class MainController {
             txtTitle.setText(selectedItem.getTitle());
             txtUsername.setText(selectedItem.getUsername());
             txtPassword.setText(selectedItem.getPassword());
+            txtPasswordShow.setText(selectedItem.getPassword());
             txtNote.setText(selectedItem.getNote());
             txtURL.setText(selectedItem.getUrl());
         }
     }
 
     /**
+     * Read the password file and create a list of {@link Item}s.
      *
      * @return
      * @throws Exception
@@ -423,6 +488,7 @@ public class MainController {
         txtTitle.setEditable(editable);
         txtUsername.setEditable(editable);
         txtPassword.setEditable(editable);
+        txtPasswordShow.setEditable(editable);
         txtNote.setEditable(editable);
         txtURL.setEditable(editable);
     }
@@ -444,12 +510,14 @@ public class MainController {
         btnNew.setDisable(disable);
         btnDelete.setDisable(disable);
         btnGenerate.setDisable(disable);
+        btnPasswordShow.setDisable(disable);
     }
 
     private void clearAllTextBoxes() {
         txtTitle.setText("");
         txtUsername.setText("");
         txtPassword.setText("");
+        txtPasswordShow.setText("");
         txtNote.setText("");
         txtURL.setText("");
     }
@@ -465,12 +533,6 @@ public class MainController {
         boolean isPasswordCorrect = passwordService.verifyPassword(passwordConfig);
 
         if (passwordConfig.password == null || passwordConfig.password.isEmpty() || isPasswordCorrect == false) {
-
-//            Alert alert = new Alert(AlertType.ERROR);
-//            alert.setTitle("Incorrect Password");
-//            alert.setHeaderText("Incorrect Password");
-//            alert.setContentText("You have entered in incorrect password.");
-//            alert.showAndWait();
             
             error("You have entered in incorrect password.");
 
@@ -485,6 +547,12 @@ public class MainController {
 
     }
 
+    /**
+     * Open up the window that prompts the user for the master password.
+     * 
+     * @return The typed master password.
+     * @throws Exception
+     */
     private String getPasswordFromPasswordController() throws Exception {
 
         // Open password enter dialog.
@@ -508,15 +576,17 @@ public class MainController {
 
     }
 
+    /**
+     * Save the password file path to the applications configuration properties file.
+     * 
+     * @param file
+     * @throws Exception
+     */
     private void savePasswordFileConfigLocation(File file) throws Exception {
 
-        String string = new StringBuilder(PasswordConfig.CONFIG_KEY_PASSWORD_FILE)
-                .append("=")
-                .append(file.getAbsolutePath()).toString();
-
-        File configFile = new File(PasswordConfig.CONFIG_FILE_NAME);
-
-        FileUtils.writeToFile(configFile, string);
+    	Properties prop = new Properties();
+    	prop.setProperty(PasswordConfig.CONFIG_KEY_PASSWORD_FILE, file.getAbsolutePath());
+    	prop.store(new FileOutputStream(PasswordConfig.CONFIG_FILE_NAME), null);
 
     }
 
